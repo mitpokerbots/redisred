@@ -1,6 +1,7 @@
 // Load the dotfiles.
 require('dotenv').load();
 
+var env = process.env.NODE_ENV || 'development';
 var port = process.env.PORT || 3000;
 var redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379/0';
 var sessionSecret = process.env.SESSION_SECRET || 'this is really secure';
@@ -35,6 +36,17 @@ app.use(cookieParser());
 app.use(expressSession({ store: redisSessionStore, secret: sessionSecret, resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+var forceSsl = function (req, res, next) {
+  if (req.headers['x-forwarded-proto'] !== 'https') {
+    return res.redirect(['https://', req.get('Host'), req.url].join(''));
+  }
+  return next();
+};
+
+if (env === 'production') {
+  app.use(forceSsl);
+}
 
 //Initialize controllers
 var frontendController = require('./controllers/admin/FrontendController')(redis, passport);
