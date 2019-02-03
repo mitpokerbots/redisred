@@ -44,7 +44,7 @@ var forceSsl = function (req, res, next) {
   return next();
 };
 
-if (env === 'production') {
+if (env === 'production' && process.env.REQUIRE_SSL === 'true') {
   app.use(forceSsl);
 }
 
